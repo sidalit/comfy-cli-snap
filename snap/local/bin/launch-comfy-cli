@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+
+export HOME="$SNAP_USER_COMMON"
+export XDG_CONFIG_HOME="$SNAP_USER_COMMON/.config"
+export XDG_DATA_HOME="$SNAP_USER_COMMON/.local/share"
+export XDG_CACHE_HOME="$SNAP_USER_COMMON/.cache"
+export XDG_STATE_HOME="$SNAP_USER_COMMON/.local/state"
+mkdir -p "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME" "$XDG_STATE_HOME"
+
+if [[ ! -v COMFY_LOCAL_URL && -r "$SNAP/server/url" ]]; then
+    export COMFY_LOCAL_URL
+    COMFY_LOCAL_URL=$(< "$SNAP/server/url")
+fi
+
+exec "$SNAP/bin/comfy" "$@"

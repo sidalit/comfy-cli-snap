@@ -1,0 +1,94 @@
+name: comfy-cli
+base: core26
+version: '1.23.0'
+title: Comfy CLI
+summary: Run ComfyUI workflows and manage local or cloud jobs from the terminal
+description: |
+  Comfy CLI provides command-line access to ComfyUI servers and Comfy Cloud.
+  Submit workflows, inspect jobs, upload inputs and download results.
+
+  Connect to the separately installed comfyui snap for a local server and
+  GPU runtime, or use a remote server or Comfy Cloud.
+license: GPL-3.0-only
+grade: stable
+confinement: strict
+website: https://docs.comfy.org/comfy-cli/getting-started
+source-code:
+  - https://github.com/Comfy-Org/comfy-cli
+  - https://github.com/sidalit/comfy-cli-snap
+issues:
+  - https://github.com/Comfy-Org/comfy-cli/issues
+  - https://github.com/sidalit/comfy-cli-snap/issues
+contact: https://github.com/sidalit/comfy-cli-snap/issues
+
+platforms:
+  amd64:
+  arm64:
+
+plugs:
+  server:
+    interface: content
+    content: comfyui-server-v1
+    target: $SNAP/server
+
+apps:
+  comfy-cli:
+    command: bin/launch-comfy-cli
+    plugs:
+      - home
+      - network
+      - network-bind
+      - desktop
+      - removable-media
+      - server
+    environment:
+      COMFY_NO_UPDATE_CHECK: '1'
+      BROWSER: /usr/bin/xdg-open
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONNOUSERSITE: '1'
+
+parts:
+  runtime:
+    plugin: nil
+    stage-packages:
+      - python3-venv
+      - git
+      - ffmpeg
+
+  comfy-cli:
+    after: [runtime]
+    plugin: uv
+    source: https://github.com/Comfy-Org/comfy-cli.git
+    source-tag: v$SNAPCRAFT_PROJECT_VERSION
+    build-snaps:
+      - astral-uv
+    build-packages:
+      - build-essential
+      - python3-dev
+    override-pull: |
+      craftctl default
+      version="$SNAPCRAFT_PROJECT_VERSION"
+      case "$version" in
+        git-*) version="0.dev0+git.${version#git-}" ;;
+      esac
+      # Upstream fills this placeholder when publishing to PyPI.
+      sed -i "s/^version = \"0.0.0\"/version = \"$version\"/" pyproject.toml uv.lock
+    override-build: |
+      # Refresh upstream's locked dependencies with published security fixes.
+      UV_FROZEN=false uv lock \
+        --upgrade-package 'anyio>=4.14.2' \
+        --upgrade-package 'certifi>=2026.10.19' \
+        --upgrade-package 'gitpython>=3.2.1' \
+        --upgrade-package 'pygments>=2.20.0' \
+        --upgrade-package 'urllib3>=2.8.0' \
+        --upgrade-package 'uv>=0.13.4'
+      craftctl default
+      ln -sf python3 "$CRAFT_PART_INSTALL/bin/python"
+      install -Dm644 LICENSE "$CRAFT_PART_INSTALL/share/doc/comfy-cli/LICENSE"
+      mkdir -p "$CRAFT_PART_INSTALL/server"
+    prime:
+      - -lib/python*/site-packages/imageio_ffmpeg/binaries/ffmpeg-*
+
+  launcher:
+    plugin: dump
+    source: snap/local
