@@ -2,6 +2,7 @@ name: comfy-cli
 base: core26
 version: '1.23.0'
 title: Comfy CLI
+icon: snap/gui/comfy-cli.png
 summary: Run ComfyUI workflows and manage local or cloud jobs from the terminal
 description: |
   Comfy CLI provides command-line access to ComfyUI servers and Comfy Cloud.

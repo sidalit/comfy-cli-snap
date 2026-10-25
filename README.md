@@ -1,28 +1,35 @@
-# Comfy CLI snap
+<div align="center">
+
+<img src="snap/gui/comfy-cli.png" alt="Comfy CLI logo" width="128" />
+
+# Comfy CLI
+
+**Run ComfyUI workflows and manage jobs from your terminal.**
 
 [![comfy-cli](https://snapcraft.io/comfy-cli/badge.svg)](https://snapcraft.io/comfy-cli)
+[![Base: core26](https://img.shields.io/badge/Base-core26-2C8C3C?logo=canonical&logoColor=white)](https://snapcraft.io/core26)
+![Confinement: strict](https://img.shields.io/badge/Confinement-strict-2C8C3C)
+[![Maintainer: sidaliteir](https://img.shields.io/badge/Maintainer-sidaliteir-2C8C3C?logo=snapcraft&logoColor=white)](https://snapcraft.io/publisher/sidaliteir)
+![Architectures: amd64 and arm64](https://img.shields.io/badge/Architectures-amd64%20%7C%20arm64-2C8C3C?logo=linux&logoColor=white)
 
-Snap packaging for [Comfy CLI](https://github.com/Comfy-Org/comfy-cli), a command-line client for ComfyUI workflows and Comfy Cloud.
+[Getting Started](#getting-started) · [Configure](#configure) · [Limitations](#limitations) · [Build](#build) · [Support](#support) · [License](#license)
 
-Unofficial build, not affiliated with or endorsed by the Comfy project.
+Unofficial snap packaging for [Comfy CLI](https://github.com/Comfy-Org/comfy-cli), a command-line client for local ComfyUI servers and Comfy Cloud.
 
-## Build
+</div>
 
-```bash
-snapcraft pack
-```
+---
 
-## Install and try
+## Getting Started
 
 <a href="https://snapcraft.io/comfy-cli"><img alt="Get it from the Snap Store" src="https://snapcraft.io/en/dark/install.svg" width="180"></a>
 
 ```bash
 sudo snap install comfy-cli
 comfy-cli --help
-sudo snap alias comfy-cli comfy   # optional: upstream command name
 ```
 
-To use the running `comfyui` server snap:
+Connect to an installed, running [`comfyui` server](https://github.com/sidalit/comfyui-snap):
 
 ```bash
 sudo snap connect comfy-cli:server comfyui:server
@@ -30,9 +37,14 @@ comfy-cli nodes ls --where local
 comfy-cli run --workflow workflow.json --where local --wait
 ```
 
-The connection supplies the server's configured address and port. The CLI does not start or stop the server. Use **Manager → Model Manager** in ComfyUI to install models on the server.
+## Configure
 
-For another server or Comfy Cloud:
+This snap has no `snap set` options. Use environment variables to select a server or destination:
+
+| Variable | Accepted values | Default |
+| --- | --- | --- |
+| `COMFY_LOCAL_URL` | An HTTP server address, such as `http://192.168.1.20:8188`. | Connected server URL; otherwise upstream preferences or `127.0.0.1:8188`. |
+| `COMFY_WHERE` | `local`, `cloud` | Project or saved preference; otherwise cloud when credentials are configured, or local. |
 
 ```bash
 COMFY_LOCAL_URL=http://192.168.1.20:8188 comfy-cli nodes ls --where local
@@ -40,29 +52,37 @@ comfy-cli cloud login
 comfy-cli jobs ls --where cloud
 ```
 
-Explicit `--host` and `--port` options override the connection URL. Cloud sign-in keeps upstream's automatic cloud routing; use `--where local` to target your local server.
+Explicit `--host`, `--port` and `--where` options override the corresponding environment settings. Configuration and sign-in data live in `~/snap/comfy-cli/common/.config/comfy-cli`.
 
-Configuration and sign-in data live under `~/snap/comfy-cli/common/.config/comfy-cli`.
+Optional setup:
 
 ```bash
-sudo snap connect comfy-cli:removable-media   # optional: /media, /mnt
+sudo snap alias comfy-cli comfy                # upstream command name
+sudo snap connect comfy-cli:removable-media    # /media, /mnt
 ```
 
-## Known limitations
+## Limitations
 
-- Local environment installation and management are not supported. Manage the `comfyui` server with snap commands; update this CLI with `sudo snap refresh comfy-cli`.
-- CLI model downloads do not install models into the separate server snap.
-- Local server URLs use HTTP; HTTPS is not supported by upstream's `COMFY_LOCAL_URL` setting.
-- Hidden files in your normal home and arbitrary host programs are unavailable under strict confinement.
+- Local environment installation and server startup are not supported. Manage the server through its snap commands.
+- CLI model downloads do not install into the server snap. Use **Manager → Model Manager** in ComfyUI.
+- `COMFY_LOCAL_URL` supports HTTP, not HTTPS.
+- Hidden files directly under your home directory and arbitrary host programs are unavailable.
+- Update the CLI with `sudo snap refresh comfy-cli`; its self-updater cannot replace the installed snap.
 
-## Update to a new upstream release
+## Build
 
-Change `version` in `snap/snapcraft.yaml`, then rebuild.
+```bash
+git clone https://github.com/sidalit/comfy-cli-snap.git
+cd comfy-cli-snap
+sudo snap install snapcraft --classic
+snapcraft pack
+```
 
-## Automation
+## Support
 
-Builds, publishing, and dependency updates use [snap-automation](https://github.com/sidalit/snap-automation).
+- **Installation or snap issues:** [open a packaging issue](https://github.com/sidalit/comfy-cli-snap/issues).
+- **Application bugs:** [report them upstream](https://github.com/Comfy-Org/comfy-cli/issues).
 
 ## License
 
-The packaging is MIT-licensed (see `LICENSE`). Comfy CLI is GPL-3.0-only-licensed; its dependencies carry their own licenses.
+Snap packaging: [MIT](https://github.com/sidalit/comfy-cli-snap/blob/main/LICENSE).
